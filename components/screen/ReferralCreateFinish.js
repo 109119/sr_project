@@ -8,8 +8,9 @@ import {
   Image,
   Text,
   StyleSheet,
-  StatusBar
+  StatusBar,
 } from "react-native";
+import AsyncStorage from "@react-native-community/async-storage";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { StackActions, NavigationActions } from "react-navigation";
 
@@ -17,11 +18,13 @@ class ReferralCreateFinish extends Component {
   state = {
     isDateTimePickerVisible: false,
     referralType: this.props.navigation.getParam("referralType"),
-    insurancePatientType: this.props.navigation.getParam("insurancePatientType")
+    insurancePatientType: this.props.navigation.getParam(
+      "insurancePatientType"
+    ),
   };
 
   static navigationOptions = {
-    header: null
+    header: null,
   };
 
   render() {
@@ -30,7 +33,7 @@ class ReferralCreateFinish extends Component {
         style={{
           width: 100 + "%",
           height: 100 + "%",
-          backgroundColor: "#ffffff"
+          backgroundColor: "#ffffff",
         }}
       >
         <View
@@ -39,7 +42,7 @@ class ReferralCreateFinish extends Component {
             justifyContent: "space-between",
             alignItems: "center",
             marginHorizontal: 5 + "%",
-            marginTop: 80
+            marginTop: 80,
           }}
         >
           <View style={{ width: 80 + "%" }}>
@@ -63,7 +66,7 @@ class ReferralCreateFinish extends Component {
               borderColor: "#28c667",
               borderWidth: 3,
               borderRadius: 300,
-              marginTop: 20
+              marginTop: 20,
             }}
           >
             <Icon name={"check"} color={"#28c667"} size={200} />
@@ -74,20 +77,24 @@ class ReferralCreateFinish extends Component {
           >
             <TouchableOpacity
               onPress={() => {
-                const resetAction = StackActions.reset({
-                  index: 1,
-                  actions: [
-                    NavigationActions.navigate({ routeName: "HomeScreen" }),
-                    NavigationActions.navigate({
-                      routeName: "ReferralCreatePatientDataScreen",
-                      params: { referralType: this.state.referralType }
-                    })
-                  ],
-                  params: {
-                    nama: this.props.navigation.getParam("user").nama
-                  }
+                AsyncStorage.getItem("user").then((result) => {
+                  let user = JSON.parse(result);
+                  let nama = user.nama;
+                  const resetAction = StackActions.reset({
+                    index: 1,
+                    actions: [
+                      NavigationActions.navigate({
+                        routeName: "HomeScreen",
+                        params: { nama: nama },
+                      }),
+                      NavigationActions.navigate({
+                        routeName: "ReferralCreatePatientDataScreen",
+                        params: { referralType: this.state.referralType },
+                      }),
+                    ],
+                  });
+                  this.props.navigation.dispatch(resetAction);
                 });
-                this.props.navigation.dispatch(resetAction);
               }}
               style={{
                 justifyContent: "center",
@@ -96,14 +103,21 @@ class ReferralCreateFinish extends Component {
                 height: 35,
                 borderRadius: 5,
                 backgroundColor: "#00818c",
-                marginTop: 20
+                marginTop: 20,
               }}
             >
               <Text
                 style={{ color: "#ffffff", fontSize: 12, fontWeight: "bold" }}
               >
                 Buat Rujukan{" "}
-                {this.state.referralType <= 1 ? "Poli" : "Emergency"} Lainnya
+                {this.state.referralType <= 1
+                  ? "Poli"
+                  : this.state.referralType <= 2
+                  ? "Emergency"
+                  : this.state.referralType <= 3
+                  ? "Maternal"
+                  : "Neonatal"}{" "}
+                Lainnya
               </Text>
             </TouchableOpacity>
           </View>
@@ -113,18 +127,29 @@ class ReferralCreateFinish extends Component {
           >
             <TouchableOpacity
               onPress={() => {
-                const resetAction = StackActions.reset({
-                  index: 0,
-                  actions: [
-                    NavigationActions.navigate({
-                      routeName: "HomeScreen",
-                      params: {
-                        nama: this.props.navigation.getParam("user").nama
-                      }
-                    })
-                  ]
+                AsyncStorage.getItem("user").then((result) => {
+                  let user = JSON.parse(result);
+                  let routeName = "";
+                  let nama = "";
+                  if (user) {
+                    routeName = "HomeScreen";
+                    nama = user.nama;
+                  } else {
+                    routeName = "LoginScreen";
+                  }
+                  const resetAction = StackActions.reset({
+                    index: 0,
+                    actions: [
+                      NavigationActions.navigate({
+                        routeName: routeName,
+                        params: {
+                          nama: nama,
+                        },
+                      }),
+                    ],
+                  });
+                  this.props.navigation.dispatch(resetAction);
                 });
-                this.props.navigation.dispatch(resetAction);
               }}
               style={{
                 justifyContent: "center",
@@ -133,7 +158,7 @@ class ReferralCreateFinish extends Component {
                 height: 35,
                 borderRadius: 5,
                 backgroundColor: "#ffffff",
-                marginTop: 20
+                marginTop: 20,
               }}
             >
               <Text
@@ -142,7 +167,7 @@ class ReferralCreateFinish extends Component {
                   fontSize: 12,
                   fontWeight: "bold",
                   textDecorationLine: "underline",
-                  textDecorationColor: "#00818c"
+                  textDecorationColor: "#00818c",
                 }}
               >
                 Kembali ke Beranda
